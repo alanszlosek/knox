@@ -1,0 +1,2 @@
+- increasing TESI's input parsing buffer surely helps with performance, as would a shorter waiting time for input. 
+	- determine how much input libiterm reads from the forked child process

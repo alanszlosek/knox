@@ -1,0 +1,7 @@
+- tab support
+- make command window not an instance of a term
+- buffer command input up to newline (glib)
+- parse command input (glib)
+- gutter between terms
+	- borders fill gutter, collapsible
+	- 

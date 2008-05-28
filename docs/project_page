@@ -1,0 +1,46 @@
+++ Introduction
+
+Knox might be called any of the following:
+
+* terminal multiplexer
+* GNU screen on steroids
+* multiple virtual-terminal emulator
+
+It divides up your console/terminal screen, allowing you to run multiple text-based applications in one session. This means you can SSH once into another machine, run knox on that machine, and have more than one application on-screen at the same time. Check the screenshots for an example, especially /files/knox-06.png(this one).
+
+Sound like something you could use? How would you use it? /feedback(Let me know)
+
+
+
+++ Technical Details
+
+Knox currently uses libiterm at its core for interpreting escape sequences. One day, when /project/Tesi(TESI) is mature, I'll switch to it. But for now iterm works and it enables me to focus on making Knox usable and useful.
+
+I've got a bit of an informal scratchpad for notes going on in my /wiki/pmwiki.php/Terminals/Terminals(wiki).
+
+
+
+++ Screenshots
+
+These were taken from my windows machine while running Knox over Putty, for kicks and screenshot taking ease.
+
+/files/knox-01.png(01 - 4VTs)
+/files/knox-02.png(02 - 4VTs)
+/files/knox-03.png(03 - 4VTs)
+/files/knox-04.png(04 - 3VTs)
+/files/knox-05.png(05 - 7VTs)
+/files/knox-06.png(06 - 5VTs with borders)
+
+++ Task List
+
+* Colors
+* Command window (like VI)
+* VT pausing
+* Copy and paste
+* Add/Delete/Hide/Show terminals dynamically
+
+
+
+++ History
+
+This was originally a friend's idea from around 2004. He and I brainstormed code structure, functionality and features. When he moved away I continued poking at it and doing research. Eventually I gained a better view of the project scope and began coding.

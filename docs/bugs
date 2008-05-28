@@ -1,0 +1,5 @@
+- how to determine what key sequences actually mean? CTRL + key, etc?
+- scroll command is issued twice, probably a bug in libiterm
+- colors
+- when exiting terms, sometimes hangs
+- need to be able to send Control-C to VTs

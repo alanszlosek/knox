@@ -1,0 +1,22 @@
+KNOX CHANGELOG
+
+0.4
+
+- using tesi
+- tweaks to divideRectangle
+	- last term on row takes up remaining cols
+	- last row of terms takes up remaining rows
+
+0.2.4
+
+- pass number of VTs on startup
+- borders and gutters around VTs
+
+0.2.3
+
+- split off rectangle arrangement code
+
+0.1
+
+- hardcoded 2 VTs, side-by-side
+- first proof of concept

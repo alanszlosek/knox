@@ -1,0 +1,23 @@
+Windows are rectangles so I need something that can arrange rectangles in a region of specified size. I'm looking to implement a couple different arrangement schemes.
+
+You may want to create some sort of arrangement structure that holds the width, height, number of terminals and other variables. That way I can pass a pointer to the structure to the arrangement functions. Perhaps the arrange() function would return some data structure that has the height, width, and position for each terminal. But, of course, this is only a suggestion. I really haven't thought much about this.
+
+Grid-Like
+	There are two choices for grid-like arrangement: favoring terminals of greater width, or greater height. For example:
+		If we have 6 terminals and favor width, it would put 2 on a row, with 3 rows.
+		If we have 6 and favor height, it would put 3 on a row, with 2 rows.
+
+Best-Fit
+	This attempts to arrange the terminals as evenly as possible. The algorithm may make use of perfect squares for finding the closest combination of even rows and columns. This may also have some user-definable maximum values: maximum number on screen; max # of rows; max # of columns.
+	For example:
+		If we have 10 terminals, it might try to find the square root of 9, which is 3 and then use 3 rows and 3 columns. However, it'd have to do something with the leftover terminal, so it should put it on the last row.
+
+Fixed
+	User-definable Rows, Columns and Terminals per Row. It would simply split the screen as evenly as it can.
+
+
+
+
+If you can come up with any other schemes, let me know. Just think of how you'd want your terminals to be arranged and whether there are certain rules to acheive it.
+
+It may be best to have a maximum values that are adhered to no matter what scheme is chosen, not just for the Best-Fit scheme.

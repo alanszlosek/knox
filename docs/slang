@@ -1,0 +1,31 @@
+Intrinsics that need to be defined:
+	newVT
+	deleteVT
+	runVT
+	vtReady
+	inputToVT
+
+C Functions
+	newVT
+		- Sets up canvas pointer and callback pointers.
+		- canvas pointer becomes a struct of x and y offsets for drawing
+			- offsets mark the location of the virtual terminal in the larger sltty canvas
+
+		callback_moveCursor = &cbMoveCursor;
+		callback_printCharacter = &cbPrintCharacter;
+		callback_eraseCharacter = &cbEraseCharacter;
+		callback_scrollRegion = &cbScrollRegion;
+		callback_scrollUp = &cbScrollUp;
+		callback_scrollDown = &cbScrollDown;
+		callback_insertLine = &cbInsertLine;
+		callback_eraseLine = &cbEraseLine;
+		callback_attributes = &cbAttributes;
+	deleteVT
+	runVT
+	vtReady
+	inputToVT(index, char*, int) - writes string of length to input pipe
+
+SLang Functions
+	- divideRectangle
+	- checking for input from virtual terminal instances
+	- reading keyboard input

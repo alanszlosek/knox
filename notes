@@ -1,0 +1,6 @@
+- increasing TESI's input parsing buffer surely helps with performance, as would a shorter waiting time for input. 
+	- determine how much input libiterm reads from the forked child process
+
+- what to do about showing the cursor correctly?
+	- how does wmove interfere with this during redrawing? relocate cursor after large updates?
+	- move cursor when focus to new VT

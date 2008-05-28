@@ -1,0 +1,33 @@
+QUESTIONS
+
+- what happens when tty app exits?
+	- callback, but what to do?
+	- somehow remove the terminal
+
+- the view object is protected
+	- should be method to get the object from the core
+
+DO
+
+- remove FD from FD set when closed
+- encapsulate VTs?
+	- keep PIDs
+	- nCurses window
+	- VTCore
+	- VTScreenView
+	- TerminalIO
+
+OTHER
+
+Test Terminal App
+
+- start app and open pipe, have knox read from it
+- specify terminal type from terminfo
+- ability to send escape codes and text from test app
+
+
+- non-ncurses input interpreter that can also return raw character input for passing to child
+- if input, run inputAlias() to get vkey int for keys (ESC, ENTER)
+	- but also get string of keys for alias aliasKeys(ALIAS)
+- vcProcessExit() - for when process is done
+- discover if vc has running child, change border color

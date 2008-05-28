@@ -1,0 +1,33 @@
+==5407== Memcheck, a memory error detector.
+==5407== Copyright (C) 2002-2007, and GNU GPL'd, by Julian Seward et al.
+==5407== Using LibVEX rev 1732, a library for dynamic binary translation.
+==5407== Copyright (C) 2004-2007, and GNU GPL'd, by OpenWorks LLP.
+==5407== Using valgrind-3.2.3, a dynamic binary instrumentation framework.
+==5407== Copyright (C) 2000-2007, and GNU GPL'd, by Julian Seward et al.
+==5407== For more details, rerun with: -v
+==5407== 
+==5407== Conditional jump or move depends on uninitialised value(s)
+==5407==    at 0x8049122: tesi_handleInput (tesi.c:35)
+==5407==    by 0x8048F56: main (main.c:100)
+==5407== 
+==5407== ERROR SUMMARY: 142 errors from 1 contexts (suppressed: 21 from 1)
+==5407== malloc/free: in use at exit: 2,336 bytes in 6 blocks.
+==5407== malloc/free: 136 allocs, 130 frees, 343,024 bytes allocated.
+==5407== For counts of detected errors, rerun with: -v
+==5407== searching for pointers to 6 not-freed blocks.
+==5407== checked 267,060 bytes.
+==5407== 
+==5407== 
+==5407== 2,336 bytes in 6 blocks are still reachable in loss record 1 of 1
+==5407==    at 0x40214B0: malloc (in /usr/lib/valgrind/x86-linux/vgpreload_memcheck.so)
+==5407==    by 0x40D91C1: SLmalloc (in /usr/lib/libslang.so.2.0.7)
+==5407==    by 0x407D958: _pSLtt_tigetent (in /usr/lib/libslang.so.2.0.7)
+==5407==    by 0x4081C0B: SLtt_initialize (in /usr/lib/libslang.so.2.0.7)
+==5407==    by 0x40825B2: SLtt_get_terminfo (in /usr/lib/libslang.so.2.0.7)
+==5407==    by 0x8048EE9: main (main.c:87)
+==5407== 
+==5407== LEAK SUMMARY:
+==5407==    definitely lost: 0 bytes in 0 blocks.
+==5407==      possibly lost: 0 bytes in 0 blocks.
+==5407==    still reachable: 2,336 bytes in 6 blocks.
+==5407==         suppressed: 0 bytes in 0 blocks.

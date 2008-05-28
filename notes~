@@ -1,0 +1,27 @@
+QUESTIONS
+
+- what happens when tty app exits?
+	- callback, but what to do?
+	- somehow remove the terminal
+
+- the view object is protected
+	- should be method to get the object from teh core
+
+- commands
+	:new .input=file:~/vtIn
+- arrangement schemes
+	- fixed # on screen - only have 4 or five, with ability to cycle through. initially have 0-4 on screen, then press key and 1-5 show, moving up the slots
+	- best-fit - this has sub-options
+		- max - max number on screen. if try to add new but limit is exceeded, prompts user
+		- vMax - man number of VTs vertically
+		- hMax - max number of VTs horizontally
+
+DO
+
+- remove FD from FD set when closed
+- encapsulate VTs?
+	- keep PIDs
+	- nCurses window
+	- VTCore
+	- VTScreenView
+	- TerminalIO

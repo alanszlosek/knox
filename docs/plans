@@ -1,0 +1,96 @@
+ROADMAP
+
+General
+
+- test-suite for examining escape sequences returned from applications
+- app to generate escape sequences on command
+- data structure and algorithms for storing terminal state and contents: colors, positions, etc
+- console windowing toolkit
+- console drawing toolkit
+	- diagonal lines
+	- shapes
+	- colors
+	- special markup to be used from outside the app? specify welcome screen with markup?
+	- how does this interact with the windowing toolkit?
+- string library
+- escape sequence to callback to code
+-
+
+Features
+
+- while focused on command window: type number of terminal and then begin typing. all keys will be sent to #d terminal. if you stop typing for more than 1.5 seconds, focus will return to command window
+- if type a tilde will switch to command window (maybe), then type number, space, and a command. upon hitting enter, will fork off the typed command and attach it to the numbered terminal. effectively replaces the numbered VT with a new process. tilde, number, enter will restart a shell
+- detachment, so can resume later from other term (fg bg)
+- multiheaded?
+- scrollable history
+- copy and paste
+- terminal hiding
+- scraping of Virtual Terminals to output file for printing, or directly to CUPS. Need to recommend a screen size for letter-sized paper, and possibly do a print-view of the VT in focus
+- direct stdout or stderr to "logging virtual terminal" ... just a place to send output, still parses escape sequences
+
+
+Commands
+	:new .input=file:~/vtIn
+	:pause 3 - pauses terminal 3. doesn't update screen though data arrives
+
+Arrangement Schemes
+	- grid - displays all on screen, in a grid-like fashion
+		- options to favor width or height. if want 6 terms:
+			- width would do 2 per row
+			- height would do 3 per row
+	- manual - specify number per row/col
+		- this would combine with the rotating through slots approach
+	- fixed # on screen - only have 4 or five, with ability to cycle through. initially have 0-4 on screen, then press key and 1-5 show, moving up the slots
+	- best-fit - incorporates someof auto-divide, with manually specified limits
+		- max - max number on screen. if try to add new but limit is exceeded, prompts user
+		- vMax - man number of VTs vertically
+		- hMax - max number of VTs horizontally
+
+
+Crazy Ideas
+
+- certain terms can auto focus on event
+- when input is sent to term, change border
+- when term doesn't produce output after a while, change border or dim
+- copy and paste
+- remote user to ssh to machine, run a client app that binds to 1+ terms for shared viewing
+
+Questions
+
+- do windows have border by default?
+	- is that up to Animation plugin?
+	- user preferences?
+	- both?
+- window sizing/arrangement/placement handled by WP?
+- how animator plug into that?
+	- need access to events queue to run scripts
+
+
+
+ULTIMATE GOAL
+
+- full text-based environment
+- applets (weather, clock)
+- dockapps
+- remote viewer to join and view/participate in remote session
+
+
+
+/dev/ptc - only for AIX
+/dev/ptmx - normal pty cloner
+
+POSSIBLE WAYS TO DEAL WITH CPU HOGGING APPS
+1. sleep for a second. catch a user input signal
+
+
+
+RESEARCH
+
+What we're really making is called a screen scraper: http://www.cs.utk.edu/~shuford/terminal/pc_emulation.html
+
+
+http://www.cs.utk.edu/~shuford/terminal/vt100_reference_card.txt
+
+tput can output terminal codes for initialization
+
+check out mlterm, dtelnet, rxvt

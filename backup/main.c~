@@ -1,0 +1,165 @@
+/*
+version 0.3
+
+WORKING
+
+draw text
+clear rectangle
+attributes other than color
+
+*/
+
+#include <sys/select.h>
+#include <iterm/core.h>
+#include <iterm/unix/ttyio.h>
+
+#include <ncurses.h>
+#include "vt.h"
+#include "list.h"
+
+
+// pass number of terminals on commandline
+int main(int argc, char *argv[]) {
+	// Virtual Terminal related
+	struct virtualTerminal *vt;
+
+	// nCurses related variables
+	WINDOW *ncursesMain;
+	int vtRows, vtCols; // to hold screen's height and width
+
+	// Miscellaneous variables
+	unsigned int input;
+	char ch;
+	char inputString[33];
+	int i, j, k, l, m, n, done, fdMax, fdCurrent, inputSize;
+	fd_set fileDescriptors;
+	struct timespec timeout;
+	linkedList *llTerminals;
+	linkedListNode *llNode;
+
+	// Initializations
+	llTerminals = listNew();
+	vtRows = vtCols = done = fdMax = 0;
+	timeout.tv_sec = 0;
+	timeout.tv_nsec = 1000000000; // 10E-9
+
+	// Initialize terminal
+	ncursesMain = initscr();
+	if(ncursesMain == NULL) {
+		perror("Error initializing nCurses\n");
+		exit(1);
+	}
+	/*
+	if(has_colors())
+		start_color();
+	*/
+	keypad(ncursesMain, true); // cause nCurses to package key combos into special, single values
+	noecho(); // don't echo input
+	refresh(); // clear the main window
+
+	// Get main window dimensions. This will be used when creating additional virtual terminals
+	getmaxyx(ncursesMain, vtRows, vtCols);
+	//vtRows = (vtRows / 2); // - (vtRows % 4);
+	//vtCols = (vtCols / 2); // - (vtCols % 4);
+
+	//fprintf(stderr, "Rows: %d Cols: %d\n", vtRows, vtCols);
+
+	// set j equal to number of terminals
+	if(argc > 1)
+		j = atoi(argv[1]);
+	else
+		j = 1;
+	k = (j / 2) + (j % 2); // number of rows of terminals
+	//l = 0; // number of columns of terminals
+
+	// Create virtual terminals
+	// NEED A FLEXIBLE POSITIONING ALGORITHM!
+	// put up on GS: algorithm for aligning rectangles to fill space
+	for(i = 0; i < j; i++) {
+		l = vtRows / k; // screen height divided by number of rows of terminals
+
+		if(i == j - 1 && i % 2 == 1) // if we're on the last one and it's odd
+			m = vtCols;
+		else // we're not on the last one, or we don't have an odd number. split cols in half
+			m = vtCols / 2; // screen width divided by two
+
+		vt = vtCreate(m, l, (i % 2) * m, (i > 1 ? l : 0), i);
+		listAppendCargo(llTerminals, vt);
+	}
+
+	llNode = listFirst(llTerminals);
+	vt = (struct virtualTerminal*) nodeCargo(llNode);
+	fdCurrent = vt->fd;
+	//fprintf(stderr, "fd %d\n",fdCurrent);
+
+	while(!done) {
+		FD_ZERO(&fileDescriptors);
+		FD_SET(0, &fileDescriptors);
+		llNode = listFirst(llTerminals);
+		fdMax = 0;
+		while(llNode != NULL) {
+			vt = (struct virtualTerminal*) nodeCargo(llNode);
+			if(vt->fd > 0 && vt->state != VT_PAUSED) { // fd will be -1 if shell program has exited
+				j = vt->fd;
+				if(j > fdMax)
+					fdMax = j;
+				FD_SET(j, &fileDescriptors);
+			}
+			llNode = listNext(llNode);
+		}
+
+		pselect(fdMax + 1, &fileDescriptors, NULL, NULL, &timeout, NULL); 
+
+		if(FD_ISSET(0, &fileDescriptors)) {
+			inputSize = read(0, &ch, 1);
+			//for(i = 0; i < inputSize; i++) {
+				switch(ch) { //inputString[i]) {
+			
+					case 9: // tab
+						k++;
+						if(k == 4)
+							k = 0;
+						//fdCurrent = TtyTerminalIO_get_associated_fd(virtuals[k]->host_io);
+						break;
+
+					case '~':
+						done = 1;
+						break;
+
+					default:
+						//ch = inputString[i];
+
+						write(fdCurrent, &ch, 1);
+						break;
+				}
+			//}
+		}
+
+		j = 0; // temporarily keep track of whether any windows were updated
+		llNode = listFirst(llTerminals);
+		while(llNode != NULL) {
+			vt = (struct virtualTerminal*) nodeCargo(llNode);
+			if(vt->fd > 0 && FD_ISSET(vt->fd, &fileDescriptors) && vt->state != VT_PAUSED) { // fd will be -1 if shell has closed
+				VTCore_dispatch(vt->core);
+			
+				wnoutrefresh(vt->window); // updates backbuffered nCurses window
+				j = 1; // specifies whether we should flush nCurses buffered windows
+			}
+			llNode = listNext(llNode);
+		}
+		if(j)
+			doupdate(); // updates were made, wnoutrefresh() was called, now flush updates
+	}
+
+	llNode = listFirst(llTerminals);
+	while(llNode != NULL) {
+		vt = (struct virtualTerminal*) nodeCargo(llNode);
+		//fprintf(stderr,"Terminal %d\n", vt->id);
+		llNode = listNext(llNode);
+	}
+
+	listDelete(llTerminals, vtDestroy);
+	endwin();
+
+	return 0;
+}

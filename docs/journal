@@ -1,0 +1,49 @@
+2006-10-13
+
+This is old:
+Terminals get much of their resolution info from environment variables. so this means when i'm running VTs, they're aware that they're running at 40x26 or so, since they each have their own environment variables. This means that I don't have to squish their output, I just need to remap the coordinates they send to the coordinates on my screen. These correspond to wherever I place the VT. Luckily nCurses does this for me.
+
+2006-08-20
+
+it's not enough to fork another process and interpret the output ... opening another pty is needed for many apps that want to know their controlling tty/pty
+
+2006-08-17
+
+having a hell of a time, once again, getting forking, pipes, and input/output to forked processes working. nothing is transparent. need more stderr printing and use of gdb.
+
+2006-04-15
+
+time to stop thinking about knox today. still a lot to do on it. have to investigate rote, to see if i should steal its escape sequence parsing code. rote is tied too closely with nCurses for me to want to use.
+
+look into how rote sends key presses back to terminals
+
+
+2005-02-12
+
+There are application called "screen scrapers" that are used to take output from text-based programs and reformat it. I guess it's possible it could have been used to create a GUI overlay for a text-based app. In a sense, this is what our project needs to do. However, a better term for our functionality would be a sort of "reverse terminal emulator", since it will take terminal output and turn it (back, in some cases) into nCurses.
+
+We've tried to think of existing applications that might be performing this sort of operation, in order to have a peek at how it is being done. Tom thought of those applications which have a way to jump to a terminal and the ability to jump back to the application. Links, the text-based web browser was his example. The only problem with this is that the terminal mode is full-screen. To me, this says that they're temporarily giving the shell the standard input and output and are keeping their hands off the terminal escape codes that are flowing out to the screen.
+
+Since part of our project involves dealing with terminal escape sequences it made sense for use to peer into terminal emulator code to see how they deal with the sequences. However, either due to the overwhelming complexity of terminal emulation or to bad code design, we couldn't find anything sensible that would shed light on our problem. The code for dealing with escape sequences seemed to be spread out across the code files in a fashion that seemed totally greek to me.
+
+After scouring SourceForge's terminal software listing I came across iTerm again (previously I ran across it when I was checking out Y-windows). I looked at the source and found almost exactly what I had been hoping to find in the other terminal emulators (rxvt, xterm, mlterm, ). iTerm had a clearly defined method for dealing with escape sequences. It had files called vt100.h and vt100.c .... something the other apps didn't. And in the c file was code that could be used to match escape sequences to function callbacks. So essentially, function callbacks are set for all of the escape sequences that need to be dealt with, and when that sequence is come across, the callback function is invoked. iTerm's callbacks would have logic for displaying the text on the screen, our callbacks will have logic that formats the text for output in an nCurses window. Perhaps we've blown the hinges off that black box?
+
+Now come some more musings on our plan to use nCurses for window placement. Should we? Perhaps we should use nCurses initially, in order to arrive at a prototype. Then we could construct our own window handling code when we're more comfortable with terminal emulation and if the need arises. My main concern is the overhead that could result in "double-buffering" that data.
+ 
+What I mean is this:
+	Say we're running an nCurses application from inside our window manager. nCurses application buffer their output, which allows certain algorithms to be performed that only update portions of the screen that change. This application's output will also be held inside an nCurses window controlled by our window manager. Again, this will be buffered.
+ 
+Another issue is that we might end up scheduling our calls that redraw the screen, which could result in strange flickers or delays. Without the additional layer of nCurses, we'd have to write our own code for determining which parts of the screen need updating, but this would mainly pertain to our own animations and things. The output from our terminal could probably just be flushed directly to the screen.
+
+This brings up a couple other ideas. Will we have to deal with wrapping long lines from the terminal output? (Does/Can iTerm do that?) What about moving the window contents up when new lines are added to the bottom? Where does that logic normally take place?
+
+
+2005-06-09
+openmotif handles IBM's PLS layout lib. what is PLS? and why is it needed?
+where does Bidi come into play? since i'm using the iterm code as a reverse emulator, i wouldn't need to worry about it, right? only if i were using the xiterm/fbiterm itself?
+
+
+hahaha
+libtui
+ch11
+If bdraw is non-NULL, an additional window will be created around the window being created. The bdraw callback is called from tuiWindowRefresh before the draw callback for it's associated window. If bdraw is NULL, no border will be created, and no callback will happen for the border. ..... "that's exactly what i was going to do for bordering: have an outlying window"

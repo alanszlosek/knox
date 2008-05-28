@@ -1,0 +1,8 @@
+knox: main.c vt.o list.o
+	gcc -g -o knox main.c vt.o list.o -lncurses -literm # -lccmalloc -ldl
+
+vt.o: vt.c vt.h
+	gcc -g -c vt.c
+
+list.o: list.c list.h
+	gcc -g -c list.c

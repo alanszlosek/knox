@@ -1,0 +1,39 @@
+Create own widget library? Built off kcurses?
+
+Field/Window library
+
+- build off kcurses
+- multicolumn select
+- vi input
+- boolean
+- single-line input
+- all fields can have labels
+
+glib have linked list? other libs with LL?
+
+
+-- OLDER
+
+Need some way of letting nCurses applications know how wide the term is. Does it just entail setting environment variables?
+Find / Replace combos for converting bash escape codes into nCurses colors
+Incremental vs. Real Time output from forks
+
+
+the next gen of linux text terminals. for which alan and tom shall become mildly famous.
+
+
+read data from pipe, loop through creating necessary ncurses characters with escape codes
+
+how can we check if bash is busy running an app? waitpid()?
+
+changing title of xterm? vt100 escape?
+
+ETERNAL QUESTIONS
+
+does bash convert program output to vt100? or is the actual program?
+	would be the app. bash is just a route-through
+
+how is ncurses efficient? wouldn't it just keep a 2 dim array of lines and cols and flush to screen?
+	no, proabably keeps back buffer of vt100 codes and ascii. that way it can tell term to move and only update where it needs to.
+
+how can i make an application take up less processor while waiting for input? has to run some kind of loop to update the screen every second, but that takes up processor

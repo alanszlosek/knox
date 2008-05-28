@@ -1,0 +1,43 @@
++--------------+
+| FORKED SHELL |
++--------------+
+    |
++------------+
+| PIPE - I/O |
++------------+
+    | 0....*
+    |
++--------+
+| BRIDGE |------------------+
++--------+                  |
+    |                       |
++--------------------+      |
+| TRANSLATOR - iTerm |      |
++--------------------+      |
+    |                       |
++----------------+  +----------------+
+| CONSOLE OUTPUT |  | KEYBOARD INPUT |
++----------------+  +----------------+
+
+High Level
+	- need to maintain dimensions of forked shell
+		- same size as window in console
+		- can change
+		- minimal translation for locations, if any
+	- windows are "named", so they can be referenced in the command window
+	- translator can have plugins: animation
+	- to facilitate scripting, need a language of commands
+		- can be used by IH to modify console on input events and state changes
+
+Translator
+	Translates output from Forked Shell to something usable in the console.
+	- organized into cycles
+	- only flush window output when has a complete set of terminal control codes
+	- handle window sizing and placement?
+	
+Input Handler
+	- handles window focusing
+	- directs input to shell or TR
+		- if to TR
+			- also specifies actions to perform
+	- would load keymap settings

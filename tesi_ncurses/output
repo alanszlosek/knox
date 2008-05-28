@@ -1,0 +1,11 @@
+bash: no job control in this shell
+alan[tesi_ncurses]$ echo $LINES
+23
+alan[tesi_ncurses]$ export LINES=22 
+calan[tesi_ncurses]$ export LINES=22 bash: no job control in this shell
+alan[tesi_ncurses]$ export COLUMNS=39 
+alan[tesi_ncurses]$ alan[tesi_ncurses]$ echo $LINES
+22
+alan[tesi_ncurses]$ echo $LINES
+23
+alan[tesi_ncurses]$ 
