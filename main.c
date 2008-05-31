@@ -27,6 +27,8 @@ int processInput(char *command, int terminalIndex, int screenHeight, int screenW
 	struct virtualTerminal *vt;
 	char *pRest, *pRest2, *pToken, *pToken2, *pToken3;
 	char *delimSpace, *delimComma, *delimHyphen;
+	
+	delimSpace = delimComma = delimHyphen = NULL;
 
 
 	if(isdigit(*command)) { // command starts with digit 
@@ -37,57 +39,51 @@ int processInput(char *command, int terminalIndex, int screenHeight, int screenW
 
 		i = -1;
 		// set NULL at the first space or colon
-		pToken = strtok_r(command, ' ', &delimSpace);
-		pToken2 = strtok_r(pToken, ',', &delimComma);
+		pToken = strtok_r(command, " ", &delimSpace); // pToken points to first string up to the space
+		pToken2 = strtok_r(pToken, ",", &delimComma); // pToken2 points to first string up to the comma
 		do {
-			pToken3 = strtok_r(pToken2, '-', &delimHyphen);
-			if(pToken3) {
-				j = strtol(pToken3, NULL, 10); // get target terminal
-				i = -1;
-				while((pToken3 = strtok_r(NULL, '-', &delimHyphen))) {
+			i = j = 0;			
+			pToken3 = strtok_r(pToken2, "-", &delimHyphen);
+			do {
+				// if start is null, set start
+				// if start isn't null, set end
+				if(i == 0) {
+					i = strtol(pToken3, NULL, 10); // get target terminal
+				} else {
 					j = strtol(pToken3, NULL, 10); // get target terminal
-					if(i != -1) { // i contains start of a range
-						i++; // we already added the first in the range so skip it
-						for(; i < j; i++)
-							targets[targetCounter++] = i;
-						i = -1;
-					}
 				}
-			} else { // no range 
-				j = strtol(pToken3, NULL, 10); // get target terminal
+			} while((pToken3 = strtok_r(NULL, "-", &delimHyphen)));
+			
+			if(i > 0) {
+				if(j > 0) {
+					for(; i <= j; i++) {
+						targets[targetCounter++] = i -1;
+					}
+				} else {
+					targets[targetCounter++] = i -1;
+				}
 			}
-		} while((pToken2 = strtok_r(NULL, ',', &delimComma)));
-		*delimSpace = ' ';
+			
+		} while((pToken2 = strtok_r(NULL, ",", &delimComma)));
 
-		j = strtol(command, &pRest, 10); // get target terminal
-		while(*pRest == '-' || *pRest == ',') {
-			j--; // terminals are numbered starting at 1 on the screen
-
-			if(*pRest == '-') { // range
-				i = j; // copy start of range into i
-			} else {
-			}
-			targets[targetCounter++] = j;
-			pRest++;
-			j = strtol(pRest, &pRest, 10); // get target terminal
-		}
-		j--; // terminals are numbered starting at 1 on the screen
-		if(i != -1) { // i contains start of a range
-			i++; // we already added the first in the range so skip it
-			for(; i < j; i++)
-				targets[targetCounter++] = i;
-			i = -1;
-		} else
-			targets[targetCounter++] = j;
-
-		if(*pRest == 0) {
-			j = targets[0];
-			if(vtGet(j)) {
-				vtHighlight(j);
-				return j;
+		pToken = strtok_r(NULL, " ", &delimSpace);
+		if(pToken == NULL) { // switch to term
+			i = targets[0];
+			if(vtGet(i)) {
+				vtHighlight(i);
+				return i;
 			}
 		}
-
+		
+		// restore space
+		if(strlen(command) > strlen(pToken)) {
+			*(pToken + strlen(pToken)) = ' ';
+		}
+		
+		strcat(pToken, "\n");
+		
+		
+		/*
 		// move the following three to functions
 		if(*pRest == ' ') { // terminal # followed by space then commands to send to it ... send with newline
 			strcat(pRest, "\n"); // send newline? ... this needs to be optional
@@ -95,7 +91,8 @@ int processInput(char *command, int terminalIndex, int screenHeight, int screenW
 		if(*pRest == ':') { // terminal # followed by colon then commands to send to it ... send without newline
 		}
 		pRest++;
-
+		*/
+		
 		for(j = 0; j < targetCounter; j++) {
 			i = targets[j];
 			//fprintf(stderr, "#%d\n", i);
@@ -103,7 +100,7 @@ int processInput(char *command, int terminalIndex, int screenHeight, int screenW
 			if(i < 0 || i > 10) // make sure we have a valid number
 				continue;
 			// rest of command should be a terminal-specific command
-			vtSend(i, pRest); // move past space
+			vtSend(i, pToken); // move past space
 
 			/*
 			if(*pRest == '.') {
