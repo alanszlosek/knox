@@ -1,6 +1,9 @@
-Keeping Nerds off X
+INSTALL
 
-Xorg
+Get the knox code (using mercurial, clone the repository), and the divideRectangle code (http://greaterscope.net/hg/divideRectangle)
+Be sure you have libiterm, libiterm headers (libiterm-dev on debian), ncurses, ncurses headers. Then:
+
+make iterm_ncurses
 
 HISTORY
 
