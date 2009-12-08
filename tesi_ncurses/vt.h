@@ -10,6 +10,7 @@
 #define VT_FOCUS 4
 
 struct virtualTerminal {
+	struct tesiObject* pointer;
 	int fd; // should probably set this to -1 when closed
 	// use active, or something for Running, Pause states
 	short state; // VT_PAUSED VT_RUNNING
@@ -21,15 +22,18 @@ struct virtualTerminal {
 	int border, padding;
 };
 
-struct tesiObject *virtualTerminals[10];
+struct virtualTerminal *virtualTerminals[10];
 
 // callbacks for iterm
 void vtPrintCharacter(void*, char, int, int);
 void vtMoveCursor(void*, int, int);
 void vtInsertLine(void*, int);
 void vtEraseLine(void*, int);
+void vtEraseCharacter(void*, int, int);
 void vtScrollRegion(void*, int, int);
 void vtScrollUp(void*);
+void vtScrollDown(void*);
+void vtBell(void*);
 void vtAttributes(void*, short, short, short, short, short, short, short);
 void vtExit(void*);
 
@@ -40,7 +44,7 @@ void vtDestroy(int);
 // SLang interaction with terminals
 // update X Y
 void vtRun(int);
-struct tesiObject *vtGet(int);
+struct virtualTerminal *vtGet(int);
 int vtReady(int);
 void vtSend(int, char*);
 void vtHighlight(int);

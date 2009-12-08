@@ -2,93 +2,89 @@
 
 #define DEBUG
 
-void vtPrintCharacter(void *pointer, char c, int x, int y) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
+// CALLBACKS
+void vtMoveCursor(void *pointer, int x, int y) {
 #ifdef DEBUG
-	fprintf(stderr, "Printing: %c\n", c);
+	fprintf(stderr, "cbMoveCursor: %d %d\n", x, y);
 #endif
-	waddch(vt->window, c);
+	wmove(pointer, y, x);
 }
 
-void vtMoveCursor(void *pointer, int col, int row) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
+void vtPrintCharacter(void *pointer, char ch, int x, int y) {
 #ifdef DEBUG
-	fprintf(stderr, "Move character %d %d\n", col,row);
+	//fprintf(stderr, "cbPrintCharacter: %c (%d)\n", ch, (int)ch);
 #endif
-
-	vt->x = col;
-	vt->y = row;
-	wmove(vt->window, row, col);
+	waddch(pointer, ch);
 }
 
-void vtInsertLine(void *pointer, int y) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
+void vtEraseCharacter(void *pointer, int x, int y) {
 #ifdef DEBUG
-	fprintf(stderr, "cbInsertLine\n");
+	fprintf(stderr, "cbEraseCharacter\n");
 #endif
-	wmove(vt->window, y, 0);
-	winsertln(vt->window);
-}
-
-void vtEraseLine(void *pointer, int y) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
-	int i;
-	for(i = 0; i < vt->width; i++) {
-		wmove(vt->window, y, i);
-		waddch(vt->window, ' ');
-	}
-}
-
-void vtScrollRegion(void *pointer, int start, int end) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
-#ifdef DEBUG
-	fprintf(stderr, "cbScrollRegion\n");
-#endif
-	wsetscrreg(vt->window, start, end);
+	wdelch(pointer);
 }
 
 void vtScrollUp(void *pointer) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
 #ifdef DEBUG
 	fprintf(stderr, "cbScrollUp\n");
 #endif
-	scrollok(vt->window, true);
-	wscrl(vt->window, 1);
-	scrollok(vt->window, false);
+	scrollok(pointer, true);
+	if(wscrl(pointer, 1) == ERR)
+		fprintf(stderr, "ncurses said there was a scrolling error\n");
+	scrollok(pointer, false);
+}
+void vtScrollDown(void *pointer) {
+#ifdef DEBUG
+	fprintf(stderr, "cbScrollDown\n");
+#endif
+	scrollok(pointer, true);
+	if(wscrl(pointer, -1) == ERR)
+		fprintf(stderr, "ncurses said there was a scrolling error\n");
+	scrollok(pointer, false);
+}
+void vtScrollRegion(void *pointer, int start, int end) {
+#ifdef DEBUG
+	fprintf(stderr, "cbScrollRegion\n");
+#endif
+	wsetscrreg(pointer, start, end);
+}
+
+void vtInsertLine(void *pointer, int y) {
+#ifdef DEBUG
+	fprintf(stderr, "cbInsertLine\n");
+#endif
+	winsertln(pointer);
+}
+
+void vtEraseLine(void *pointer, int y) {
+#ifdef DEBUG
+	fprintf(stderr, "cbEraseLine\n");
+#endif
+	wclrtoeol(pointer);
+}
+
+void vtBell(void *pointer) {
+#ifdef DEBUG
+	fprintf(stderr, "cbBell\n");
+#endif
 }
 
 void vtAttributes(void *pointer, short bold, short blink, short inverse, short underline, short foreground, short background, short charset) {
-	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
-	int on, off;
-	on = off = 0;
+#ifdef DEBUG
+	fprintf(stderr, "cbAttributes. bold %i blink %i inverse %i underline %i foreground %i background %i\n", bold, blink, inverse, underline, foreground, background);
+#endif
 	if(bold)
-		on |= A_BOLD;
+		wattron(pointer, A_BOLD);
 	else
-		off |= A_BOLD;
-	if(blink)
-		on |= A_BLINK;
-	else
-		off |= A_BLINK;
+		wattroff(pointer, A_BOLD);
 	if(inverse)
-		on |= A_REVERSE;
+		wattron(pointer, A_STANDOUT);
 	else
-		off |= A_REVERSE;
-	if(underline)
-		on |= A_UNDERLINE;
-	else
-		off |= A_UNDERLINE;
-	/*
-	if(foreground)
-		on |= foreground;
-	else
-		off |= foreground;
-	if(background)
-		on |= background;
-	else
-		off |= background;
-	*/
-	wattron(vt->window, on);
-	wattroff(vt->window, off);
+		wattroff(pointer, A_STANDOUT);
+
+	// keep overriding the pair
+	init_pair(7, foreground, background);
+	wattron(pointer, COLOR_PAIR(7));
 }
 
 void vtExit(void *pointer) {
@@ -101,15 +97,17 @@ void vtCreate(int width, int height, int x, int y, int number) {
 	struct tesiObject *to;
 	struct virtualTerminal *vt;
 
-	to = newTesiObject("/bin/cat", width, height);
+	to = newTesiObject("/bin/bash", width, height);
 	to->callback_printCharacter = &vtPrintCharacter;
-	//to->callback_printString = &vtPrintString;
 	to->callback_moveCursor = &vtMoveCursor;
 	to->callback_insertLine = &vtInsertLine;
 	to->callback_eraseLine = &vtEraseLine;
+	to->callback_eraseCharacter = &vtEraseCharacter;
 	to->callback_scrollRegion = &vtScrollRegion;
 	to->callback_scrollUp = &vtScrollUp;
+	to->callback_scrollDown = &vtScrollDown;
 	to->callback_attributes = &vtAttributes;
+	to->callback_bell = &vtBell;
 
 	vt = malloc(sizeof(struct virtualTerminal));
 	if(vt == NULL) {
@@ -169,7 +167,8 @@ void vtCreate(int width, int height, int x, int y, int number) {
 	//mvwprintf(vt->wBorder);
 
 	to->pointer = vt;
-	virtualTerminals[number] = to;
+	vt->pointer = to;
+	virtualTerminals[number] = vt;
 }
 
 /*
@@ -180,9 +179,9 @@ void vtDestroy(int index) {
 	struct tesiObject *to;
 	struct virtualTerminal *vt;
 
-	to = virtualTerminals[index];
+	vt = virtualTerminals[index];
 	// send kill signals to child processes
-	vt = to->pointer;
+	to = vt->pointer;
 	// not sure if the library code makes sure not to double-free
 	if(vt)
 		free(vt); // free our encapsulation structure
@@ -191,13 +190,10 @@ void vtDestroy(int index) {
 }
 
 
-struct tesiObject *vtGet(int index) {
-	return virtualTerminals[index];
-}
 
 void vtMove(int index, int x, int y, int width, int height) {
-	struct tesiObject *to = virtualTerminals[index];
-	struct virtualTerminal *vt;
+	struct tesiObject *to;
+	struct virtualTerminal *vt = virtualTerminals[index];
 	char message[64];
 
 	if(to != NULL) {
@@ -223,10 +219,14 @@ void vtMove(int index, int x, int y, int width, int height) {
 	}
 }
 
+struct virtualTerminal *vtGet(int index) {
+	return virtualTerminals[index];
+}
+
 void vtSend(int index, char *input) {
-	struct tesiObject *to = virtualTerminals[index];
-	if(to != NULL) // set input to vt
-		write(to->fd_input, input, strlen(input));
+	struct virtualTerminal *vt = virtualTerminals[index];
+	if(vt != NULL) // set input to vt
+		write(vt->fd, input, strlen(input));
 }
 
 void vtHighlight(int index) {
@@ -236,10 +236,10 @@ void vtHighlight(int index) {
 
 	if(to != NULL) {
 		for(i = 0; i < 10; i++) {
-			to = vtGet(i);
-			if(!to)
+			vt = vtGet(i);
+			if(!vt)
 				continue;
-			vt = (struct virtualTerminal*) to->pointer;
+			//vt = (struct virtualTerminal*) to->pointer;
 			if(i == index) { // for now just highlight terminal's title bar
 				wattron(vt->wBorder, A_BOLD);
 				wattron(vt->wBorder, A_REVERSE);

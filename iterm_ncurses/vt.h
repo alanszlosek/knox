@@ -3,8 +3,6 @@
 
 #include <stdlib.h>
 #include <string.h>
-#include <iterm/core.h>
-#include <iterm/unix/ttyio.h>
 #include <ncurses.h>
 
 #define VT_RUNNING 1

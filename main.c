@@ -8,8 +8,8 @@
 #ifdef USE_NCURSES
 #include <ncurses.h>
 #endif
-//#include "tesi_ncurses/vt.h"
-#include "iterm_ncurses/vt.h"
+#include "tesi_ncurses/vt.h"
+//#include "iterm_ncurses/vt.h"
 
 #define DEBUG
 
@@ -219,6 +219,7 @@ int main() {
 		fprintf(stderr, "max color pairs: %d\n", COLOR_PAIRS);
 #endif
 		k = 1;
+/*
 		for(i = 0; i < COLORS; i++) {
 			for(j = 0; j < COLORS; j++) {
 				vt_colors[i][j] = k;
@@ -226,6 +227,8 @@ int main() {
 				k++;
 			}
 		}
+*/
+
 		//init all color pairs
 		/*
 		 * black red green yellow blue magenta cyan white
@@ -271,7 +274,9 @@ int main() {
 			//if(vtGet(i) != NULL && tesi_handleInput(vtGet(i))) {
 			vt = vtGet(i);
 			if(vt != NULL && vt->fd != -1 && FD_ISSET(vt->fd, &fileDescriptors)) {
-				VTCore_dispatch(vt->core);
+
+				tesi_handleInput(vt->pointer);
+				//VTCore_dispatch(vt->core);
 #ifdef USE_NCURSES
 				//vt = (struct virtualTerminal*) vtGet(i)->pointer;
 				wnoutrefresh(vt->window);
