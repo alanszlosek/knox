@@ -140,9 +140,14 @@ int tesi_handleControlCharacter(struct tesiObject *to, char c) {
 			to->y++;
 			//if(to->insertMode == 0 && to->linefeedMode == 1)
 				//to->x = 0;
-			tesi_limitCursor(to);
-			if(to->callback_moveCursor)
-				to->callback_moveCursor(to->pointer, to->x, to->y);
+			if(to->y >= to->height) {
+				to->y--;	
+				if(to->callback_scrollUp)
+					to->callback_scrollUp(to->pointer);
+			} else {
+				if(to->callback_moveCursor)
+					to->callback_moveCursor(to->pointer, to->x, to->y);
+			}
 			break;
 
 		case '\t': // ht - horizontal tab, ('I' - '@')
@@ -565,7 +570,9 @@ struct tesiObject* newTesiObject(char *command, int width, int height) {
 
 #ifdef DEBUG
 		fprintf(stderr, "Before fork. process id: %i parent process id: %i session id: %i process group id: %i\n", (int)getpid(), (int)getppid(), getsid(0), (int)getpgid(0));
+#ifdef DEBUG
 		fprintf(stderr, "session id: %i process group id: %i\n", getsid(0), (int)getpgid(0));
+#endif
 #endif
 
 	to->pid = fork();
@@ -613,8 +620,8 @@ void deleteTesiObject(void *p) {
 
 	// kill if process is still running
 	//kill(-(getpgid(to->pid)), SIGTERM); // kill all with this process group id
-	kill(to->pid, SIGTERM); // probably don't need this line
-	waitpid(to->pid);
+	kill(to->pid, 9); // probably don't need this line
+	waitpid(to->pid, NULL, 0);
 
 	close(to->ptyMaster);
 

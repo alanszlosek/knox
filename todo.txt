@@ -1,3 +1,4 @@
+- something's screwy where top doesn't end and scroll up properly... think something is messed up with window heights
 - tab support
 - make command window not an instance of a term
 - buffer command input up to newline (glib)

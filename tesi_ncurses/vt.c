@@ -96,8 +96,15 @@ void vtExit(void *pointer) {
 void vtCreate(int width, int height, int x, int y, int number) {
 	struct tesiObject *to;
 	struct virtualTerminal *vt;
+	int border = 1;
 
-	to = newTesiObject("/bin/bash", width, height);
+	// height may be less if we're going to create a border window
+	
+	if(border) {
+		to = newTesiObject("/bin/bash", width, height - 1);
+	} else {
+		to = newTesiObject("/bin/bash", width, height);
+	}
 	to->callback_printCharacter = &vtPrintCharacter;
 	to->callback_moveCursor = &vtMoveCursor;
 	to->callback_insertLine = &vtInsertLine;
@@ -118,7 +125,7 @@ void vtCreate(int width, int height, int x, int y, int number) {
 	vt->fdActivity = to->fd_activity;
 	vt->fdInput = to->fd_input;
 	vt->state = VT_RUNNING;
-	vt->border = 1;
+	vt->border = border;
 	vt->padding = 0;
 
 	vt->window = NULL;
@@ -156,7 +163,7 @@ void vtCreate(int width, int height, int x, int y, int number) {
 		free(vt);
 		return;
 	}
-	scrollok(vt->window, false);
+	//scrollok(vt->window, false);
 
 	if(vt->border)
 		wnoutrefresh(vt->wBorder);
@@ -182,6 +189,10 @@ void vtDestroy(int index) {
 	struct virtualTerminal *vt;
 
 	vt = virtualTerminals[index];
+
+	// close out ncurses windows
+	delwin(vt->window);
+	delwin(vt->wBorder);
 	// send kill signals to child processes
 	to = vt->pointer;
 	// not sure if the library code makes sure not to double-free
