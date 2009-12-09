@@ -1,0 +1,37 @@
+# TESI. A fully-functional terminal with only the necessary escape sequences.
+# http://www.greaterscope.net/project/Tesi
+# arrow keys are mapped to \E[hjkl] like in VIM
+tesi|tesi teminal,
+	am, colors#8, pairs#64, it#8,
+	is2=\ER\EC\E0;0M,
+	clear=\EC,
+	el=\Ec,
+
+	csr=\E%p1%d;%p2%dR,
+	ind=\EU,
+	ri=\ED,
+
+	home=\E0;0M,
+	cup=\E%p1%d;%p2%dM,
+
+	il=\E%p1%dI,
+	dl=\E%p1%di,
+
+	bel=^G,
+
+	sgr0=\E0a,
+	smso=\E1;1a,
+	rmso=\E1;0a,
+	smul=\E2;1a,
+	rmul=\E2;0a,
+	rev=\E3;1a,
+	blink=\E4;1a,
+	bold=\E5;1a,
+	setf=\E6;%p1%da,
+	setb=\E7;%p1%da,
+
+#	kent=\r\n,
+	kcuu1=\Eu,
+	kcud1=\Ed,
+	kcub1=\El,
+	kcuf1=\Er,

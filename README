@@ -1,9 +1,20 @@
 INSTALL
 
-Get the knox code (using mercurial, clone the repository), and the divideRectangle code (http://greaterscope.net/hg/divideRectangle)
-Be sure you have libiterm, libiterm headers (libiterm-dev on debian), ncurses, ncurses headers. Then:
+Make sure you have terminfo, ncurses and the ncurses development headers.
 
-make iterm_ncurses
+Install TESI's terminfo definition using:
+
+	tic third_party/tesi/tesi.terminfo
+
+Then:
+
+	make tesi_ncurses
+
+Run with:
+
+	./knox 2> errors
+
+(stderr debugging output is one, so pipe it to a file)
 
 HISTORY
 
