@@ -19,5 +19,5 @@ tesi_ncurses_vt.o: tesi_ncurses/vt.c tesi_ncurses/vt.h
 tesi_slang_vt.o: tesi_slang/vt.c tesi_slang/vt.h
 	gcc -c tesi_slang/vt.c -o tesi_slang_vt.o
 
-divideRectangle.o: ../divideRectangle/divideRectangle.c ../divideRectangle/divideRectangle.h
-	gcc -c ../divideRectangle/divideRectangle.c -lm
+divideRectangle.o: third_party/divideRectangle/divideRectangle.c third_party/divideRectangle/divideRectangle.h
+	gcc -c third_party/divideRectangle/divideRectangle.c -lm
