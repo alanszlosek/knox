@@ -11,7 +11,8 @@
 
 struct virtualTerminal {
 	struct tesiObject* pointer;
-	int fd; // should probably set this to -1 when closed
+	int fdActivity; // should probably set this to -1 when closed
+	int fdInput; // should probably set this to -1 when closed
 	// use active, or something for Running, Pause states
 	short state; // VT_PAUSED VT_RUNNING
 

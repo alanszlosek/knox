@@ -1,1 +1,1 @@
-#define USE_NCURSES
+#define USE_NCURSES 1

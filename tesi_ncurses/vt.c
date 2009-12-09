@@ -1,6 +1,6 @@
 #include "vt.h"
 
-#define DEBUG
+#define DEBUG 1
 
 // CALLBACKS
 void vtMoveCursor(void *pointer, int x, int y) {
@@ -12,7 +12,7 @@ void vtMoveCursor(void *pointer, int x, int y) {
 
 void vtPrintCharacter(void *pointer, char ch, int x, int y) {
 #ifdef DEBUG
-	//fprintf(stderr, "cbPrintCharacter: %c (%d)\n", ch, (int)ch);
+	fprintf(stderr, "cbPrintCharacter: %c (%d)\n", ch, (int)ch);
 #endif
 	waddch(pointer, ch);
 }
@@ -89,7 +89,7 @@ void vtAttributes(void *pointer, short bold, short blink, short inverse, short u
 
 void vtExit(void *pointer) {
 	struct virtualTerminal *vt = (struct virtualTerminal*) pointer;
-	vt->fd = -1; // this will no longer be added to the select list
+	vt->fdActivity = vt->fdInput = -1; // this will no longer be added to the select list
 	//fprintf(stderr,"VT Exit\n");
 }
 
@@ -115,6 +115,8 @@ void vtCreate(int width, int height, int x, int y, int number) {
 		return;
 	}
 	vt->id = number + 1;
+	vt->fdActivity = to->fd_activity;
+	vt->fdInput = to->fd_input;
 	vt->state = VT_RUNNING;
 	vt->border = 1;
 	vt->padding = 0;
@@ -166,7 +168,7 @@ void vtCreate(int width, int height, int x, int y, int number) {
 	// use first line for terminal's number
 	//mvwprintf(vt->wBorder);
 
-	to->pointer = vt;
+	to->pointer = vt->window;
 	vt->pointer = to;
 	virtualTerminals[number] = vt;
 }
@@ -196,20 +198,19 @@ void vtMove(int index, int x, int y, int width, int height) {
 	struct virtualTerminal *vt = virtualTerminals[index];
 	char message[64];
 
+	to = vt->pointer;
+
 	if(to != NULL) {
-		vt = (struct virtualTerminal*) to->pointer;
-		vt->x = x;
-		vt->y = y;
+		vt->x = to->x = x;
+		vt->y = to->y = y;
 		height--; // because of title window
-		to->width = width;
-		to->height = height;
-		vt->width = width;
-		vt->height = height;
+		vt->width = to->width = width;
+		vt->height = to->height = height;
 
 		// resize ncurses windows
 		// send resize signal to app (will bash pass signal on to child?)
 		// is there any way to check if bash has a child process?
-		vtScrollRegion(vt, 0, height);
+		vtScrollRegion(vt->window, 0, height);
 		snprintf(message, 63, "export LINES=%d \n", height);
 		vtSend(index, message);
 		snprintf(message, 63, "export COLUMNS=%d \n", width);
@@ -220,13 +221,17 @@ void vtMove(int index, int x, int y, int width, int height) {
 }
 
 struct virtualTerminal *vtGet(int index) {
-	return virtualTerminals[index];
+	if(index >= 0 && index < 10) {
+		return virtualTerminals[index];
+	} else {
+		return NULL;
+	}
 }
 
 void vtSend(int index, char *input) {
 	struct virtualTerminal *vt = virtualTerminals[index];
 	if(vt != NULL) // set input to vt
-		write(vt->fd, input, strlen(input));
+		write(vt->fdInput, input, strlen(input));
 }
 
 void vtHighlight(int index) {

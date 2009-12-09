@@ -11,7 +11,7 @@
 #include "tesi_ncurses/vt.h"
 //#include "iterm_ncurses/vt.h"
 
-#define DEBUG
+#define DEBUG 1
 
 #ifdef USE_NCURSES
 WINDOW *ncursesScreen;
@@ -147,15 +147,16 @@ int processInput(char *command, int terminalIndex, int screenHeight, int screenW
 				pToken = strtok(NULL, " ");
 				if(pToken && isdigit(*pToken)) { // probably have a number
 					numberTerminals = strtol(pToken, NULL, 10); // get target terminal
-				} else
+				} else // no number, just create 1
 					numberTerminals = 1;
+				j = 0;
 				for(i = 0; i < 10; i++) {
 					if(vtGet(i) != NULL)
-						numberTerminals++;
+						j++;
 				}
 
 #ifdef DEBUG
-				fprintf(stderr, "%d existing terminals, creating 1\n", numberTerminals - 1);
+				fprintf(stderr, "%d existing terminals, creating %d\n", j, numberTerminals);
 #endif
 
 				// we're about to resize terminals, clear the background
@@ -188,7 +189,7 @@ int processInput(char *command, int terminalIndex, int screenHeight, int screenW
 int main() {
 	int i, j, k, screenHeight, screenWidth;
 	int input;
-	unsigned int ch;
+	char ch;
 	char *boundString;
 	int ch2;
 	char inputBuffer[40];
@@ -218,7 +219,7 @@ int main() {
 		fprintf(stderr, "max colors: %d\n", COLORS);
 		fprintf(stderr, "max color pairs: %d\n", COLOR_PAIRS);
 #endif
-		k = 1;
+
 /*
 		for(i = 0; i < COLORS; i++) {
 			for(j = 0; j < COLORS; j++) {
@@ -237,70 +238,80 @@ int main() {
 		 * */
 	}
 
-	keypad(ncursesScreen, true); // cause nCurses to package key combos into special, single values
-	nodelay(ncursesScreen, TRUE); // return immediately if no input is waiting
+	//nodelay(ncursesScreen, TRUE); // return immediately if no input is waiting
 	raw();
 	noecho(); // don't echo input
+	//cbreak();
+	//keypad(ncursesScreen, true); // cause nCurses to package key combos into special, single values
 	refresh(); // clear the main window
 
 	// Get main window dimensions. This will be used when creating additional virtual terminals
 	getmaxyx(ncursesScreen, screenHeight, screenWidth);
+#ifdef DEBUG
+	fprintf(stderr, "Screen height, width: %i %i\n", screenHeight, screenWidth);
 #endif
+#endif
+
 
 	inputBuffer[0] = 0;
 	mvwaddstr(ncursesScreen, screenHeight - 1, 0, ":");
 
 	mvwaddstr(ncursesScreen, 1, 0, "USING KNOX\n\nCommands\n\t\"create\" - creates a new Virtual Terminal\n\t\"create #\" - create # number of new Virtual Terminals\n\t\"NUMBER\" - sets focus to so numbered terminal\n\t\"NUMBER COMMAND\" - sends COMMAND to numbered terminal followed by newline");
 	wmove(ncursesScreen, screenHeight - 1, 1);
+	wnoutrefresh(ncursesScreen);
 
 	terminalIndex = -1;
 	keepRunning = 1;
-	k = 0;
+	ch = '\0';
+	j = 1;
 	while(keepRunning) {
 		FD_ZERO(&fileDescriptors);
+		FD_SET(0, &fileDescriptors);
+		fdMax = 0;
+		// do i need to re-add the file descriptors every time?
 		for(i = 0; i < 10; i++) {
-			//if(vtGet(i) != NULL && tesi_handleInput(vtGet(i))) {
 			vt = vtGet(i);
-			if(vt && vt->fd != -1) {
-				if(vt->fd > fdMax)
-					fdMax = vt->fd;
-				FD_SET(vt->fd, &fileDescriptors);
+			if(vt && vt->fdActivity != -1) {
+				if(vt->fdActivity > fdMax)
+					fdMax = vt->fdActivity;
+				FD_SET(vt->fdActivity, &fileDescriptors);
 			}
 		}
 		
 		pselect(fdMax + 1, &fileDescriptors, NULL, NULL, &timeout, NULL);
-		j = 0;
 		for(i = 0; i < 10; i++) {
-			//if(vtGet(i) != NULL && tesi_handleInput(vtGet(i))) {
 			vt = vtGet(i);
-			if(vt != NULL && vt->fd != -1 && FD_ISSET(vt->fd, &fileDescriptors)) {
+			if(vt != NULL && vt->fdActivity != -1 && FD_ISSET(vt->fdActivity, &fileDescriptors)) {
 
+#ifdef DEBUG
+				fprintf(stderr, "VT %i has input\n", i);
+#endif
 				tesi_handleInput(vt->pointer);
+#ifdef DEBUG
+				fprintf(stderr, "Done with VT %i input\n", i);
+#endif
 				//VTCore_dispatch(vt->core);
 #ifdef USE_NCURSES
 				//vt = (struct virtualTerminal*) vtGet(i)->pointer;
 				wnoutrefresh(vt->window);
 #endif
-				j++; // keep track of the terminals that need updating
+				j++;
 			}
 		}
-		if(j || k) { // if a VT or command window needs updating
-#ifdef USE_NCURSES
-			// re-move cursor to correct location after updating screens
-			if(terminalIndex > -1) {
-				//to = (struct tesiObject*) vtGet(terminalIndex);
-				//vt = (struct virtualTerminal*) to->pointer;
-				vt = vtGet(terminalIndex);
-				//wmove(vt->window, to->y, to->x);
-			} else {
-				wmove(ncursesScreen, screenHeight - 1, 1 + strlen(inputBuffer));
-			}
 
+		if(j) {
 			doupdate();
+			j = 0;
 		}
-		k = 0;
-		ch = wgetch(ncursesScreen); // ?
-#endif
+
+		// no keyboard input waiting
+		if(FD_ISSET(0, &fileDescriptors)) {
+			read(0, &ch, 1);
+		} else {
+			ch = '\0';
+			continue;
+		}
+
 #ifdef USE_SLANG
 			SLsmg_refresh();
 		if(!SLang_input_pending(1)) // wait 1/10 of a second
@@ -308,48 +319,40 @@ int main() {
 		ch = SLang_getkey();
 #endif
 
-#ifdef USE_NCURSES
-#endif
-
 		switch(ch) {
 			case '`': // tilde pressed, cycle through terms?
-			//case KEY_RIGHT: // tilde pressed, cycle through terms?
 				terminalIndex++;
-				if(terminalIndex == 10 || vtGet(terminalIndex) == NULL)
+				if(terminalIndex == 10 || vtGet(terminalIndex) == NULL) {
 					terminalIndex = -1;
+				}
 				vtHighlight(terminalIndex);
-				k = 1; // update cursor position
+				j++;
 				break;
 			case ERR: // no input
 				break;
 			default:
 				if(terminalIndex > -1) { // send input to terminal
 					//to = vtGet(terminalIndex);
+#ifdef DEBUG
+					fprintf(stderr, "Get terminal %i\n", terminalIndex);
+#endif
 					vt = vtGet(terminalIndex);
 					if(vt) { // this should never be NULL, but check anyway
-						boundString = keybound(ch, 0);
-						if(boundString) {
-#ifdef DEBUG
-							fprintf(stderr, "key string: %s\n", boundString);
-#endif
-							write(vt->fd, boundString, strlen(boundString));
-							free(boundString);
-						} else
-							write(vt->fd, &ch, 1);
-
+						write(vt->fdInput, &ch, 1);
 					}
 
 				} else { // build input buffer
 #ifdef DEBUG
 					fprintf(stderr, "Keypress: %d\n", ch);
 #endif
-					if(ch == 10) { // parse buffer when Enter is pressed, returns active terminal index
+					if(ch == 13) { // parse buffer when Enter is pressed, returns active terminal index
 						//wclear(ncursesScreen);
 						terminalIndex = processInput(inputBuffer, terminalIndex, screenHeight, screenWidth);
+#ifdef DEBUG
+						fprintf(stderr, "terminalIndex %d\n", terminalIndex);
+#endif
 						vtHighlight(terminalIndex);
 
-						FD_ZERO(&fileDescriptors);
-						FD_SET(0, &fileDescriptors);
 #ifdef USE_NCURSES
 						// clear command window
 						mvwaddch(ncursesScreen, screenHeight - 1, 0, ':');
@@ -357,7 +360,7 @@ int main() {
 						wclrtoeol(ncursesScreen);
 						wmove(ncursesScreen, screenHeight - 1, 1);
 						wnoutrefresh(ncursesScreen);
-						k = 1;
+						j++;
 #endif
 						inputBuffer[0] = 0;
 
@@ -365,8 +368,13 @@ int main() {
 						i = strlen(inputBuffer);
 						inputBuffer[ i ] = ch;
 						inputBuffer[ i + 1 ] = 0;
+#ifdef DEBUG
+						fprintf(stderr, "inputBuffer %s\n", inputBuffer);
+#endif
 #ifdef USE_NCURSES
 						mvwaddstr(ncursesScreen, screenHeight - 1, 1, inputBuffer);
+						wnoutrefresh(ncursesScreen);
+						j++;
 #endif
 #ifdef USE_SLANG
 						SLsmg_gotorc(SLtt_Screen_Rows - 1, 0);

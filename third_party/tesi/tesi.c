@@ -565,9 +565,7 @@ struct tesiObject* newTesiObject(char *command, int width, int height) {
 
 #ifdef DEBUG
 		fprintf(stderr, "Before fork. process id: %i parent process id: %i session id: %i process group id: %i\n", (int)getpid(), (int)getppid(), getsid(0), (int)getpgid(0));
-#ifdef DEBUG
 		fprintf(stderr, "session id: %i process group id: %i\n", getsid(0), (int)getpgid(0));
-#endif
 #endif
 
 	to->pid = fork();
