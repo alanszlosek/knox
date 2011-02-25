@@ -14,10 +14,10 @@ Run with:
 
 	./knox 2> errors
 
-(stderr debugging output is one, so pipe it to a file)
+(stderr debugging output is on, so pipe it to a file)
 
 HISTORY
 
-While going to college at the University of Central Florida I met falldeaf who likes to brainstorm new inventions. One of these was Knox. I don't exactly remember how he initially described it, but we began refining the idea in Spring of 2004 over Kahlua on my closet mirror-doors with a dry erase marker. We came up with this (robot pic), which undoubtedly was the humorous result and not the intended outcome of the applications.
+This project idea came from falldeaf whom I met at the University of Central Florida. We began the design in Spring of 2004 on my mirrored closet doors with a dry erase marker. He drew a use case and then evolved the drawing into a robot face and body ... a humorous detour but not the intended direction of the application.
 
-Over the next couple months I kept researching terminals to determine the technology behind them. I wrote code that experimented with forking process and sending input and output to it over a pipe, which is the crux of the application. Then I took a job and falldeaf moved away, so it was put on hold for a couple months. Every now and then I'd do some more research about terminfo, terminal escape sequences, screen management libraries, but never wrote any serious code. It was probably Fall 2005 when I wrote my first serious iteration, which then got rewritten when I added libiterm into the mix in Spring 2006. In fact, it's Spring 2006 as I'm writing this.
+Over the next couple months I kept researching terminals and what made them tick. I experimented with forking a process and sending IO to it over a pipe, which is the crux of the application. Then I took a job and falldeaf moved away, so it was put on hold for a couple months. Every now and then I'd do some more research about terminfo, terminal escape sequences, screen management libraries, but never wrote any serious code. It was probably Fall 2005 when I wrote my first serious iteration, which was rewritten further when I added libiterm to the mix in Spring 2006.
