@@ -1,3 +1,5 @@
+Check the screenshots folder to see what it does.
+
 INSTALL
 
 Make sure you have terminfo, ncurses and the ncurses development headers.
